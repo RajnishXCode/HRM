@@ -1,8 +1,9 @@
 require("dotenv").config();
 const express = require("express");
-const {connect } = require("./Utility/database");
+const {connect } = require("./services/database");
 const cors = require("cors");
 const Employee = require("./Models/Employee");
+const { verifyToken } = require("./services/auth");
 
 const app = express();
 
@@ -27,6 +28,20 @@ app.use(express.urlencoded({ extended: true }));
 
 app.get("/", (req, res) => {
     res.send("Welcome to HRM API");
+});
+
+app.post("/api/auth/validate-session", async (req, res) => {
+    const token = req.headers.authorization;
+    console.log("token", req.headers);
+    if (!token) {
+        return res.status(401).json({ status: false, error: "Unauthorized" });
+    }
+    const decoded = await verifyToken(token);
+    console.log("decoded", decoded);
+    if (!decoded) {
+        return res.status(401).json({ status: false, error: "Unauthorized" });
+    }
+    res.status(200).json({ status: true, message: "Token is valid" });
 });
 
 app.use("/api/v1/", require("./Routes/EmployeeRoutes"));
